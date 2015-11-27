@@ -11,7 +11,7 @@ This package allows you to port forward all traffic through a proxy on your iOS 
 
 +This package
 
-+Arpspoof(Dsniif Suite)
++Arpspoof(Dsniff Suite)
 
 All of these can be downloaded from my repo: http://www.starwarsfan2099.x10host.com/repo
 
