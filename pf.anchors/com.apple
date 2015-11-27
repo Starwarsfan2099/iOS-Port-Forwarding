@@ -1,0 +1,25 @@
+#
+# com.apple ruleset, referred to by the default /etc/pf.conf file.
+# See notes in that file regarding the anchor point in the main ruleset.
+#
+# Copyright (c) 2011 Apple Inc. All rights reserved.
+#
+# ruleset used by IceFloor when doing NAT using PF
+
+#
+# Internet Sharing anchor point. (disabled by IceFloor 1.4)
+#
+# nat-anchor "100.InternetSharing/*"
+# rdr-anchor "100.InternetSharing/*"
+# anchor "100.InternetSharing/*"
+
+#
+# AirDrop anchor point.
+#
+anchor "200.AirDrop/*"
+
+#
+# Application Firewall anchor point.
+#
+anchor "250.ApplicationFirewall/*"
+

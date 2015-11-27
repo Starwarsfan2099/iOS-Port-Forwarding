@@ -1,0 +1,1 @@
+table <whitelist> { 0.0.0.0/0 ::/0 }

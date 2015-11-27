@@ -1,0 +1,3 @@
+table <my_custom_blocks> {  } persist
+block drop log quick from <my_custom_blocks> to any
+block drop log quick from any to <my_custom_blocks>

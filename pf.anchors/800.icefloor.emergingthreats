@@ -1,0 +1,3 @@
+table <emergingthreats> { } persist
+block drop log quick from <emergingthreats> to any
+block drop log quick from any to <emergingthreats>

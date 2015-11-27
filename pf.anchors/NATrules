@@ -1,0 +1,3 @@
+rdr pass on en0 proto tcp from any to any port 80 -> 127.0.0.1 port 10000
+#nat on en0 inet from en0:network to any -> (en0)
+#rdr on en0 proto tcp from any to any port 80 -> 127.0.0.1 port 1000 

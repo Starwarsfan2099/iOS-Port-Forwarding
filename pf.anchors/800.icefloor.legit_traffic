@@ -1,0 +1,13 @@
+# Permit all traffic going out, keep state so that replies are automatically passed;
+pass out inet keep state label "legit_traffic_other"
+# Permit only some service (these rules are there only for labels)
+pass out inet proto tcp from any to any port 80 flags S/SA keep state label "legit_traffic_http"
+pass out inet proto tcp from any to any port 443 flags S/SA keep state label "legit_traffic_https"
+pass out inet proto tcp from any to any port 110 flags S/SA keep state label "legit_traffic_pop3"
+pass out inet proto tcp from any to any port 465 flags S/SA keep state label "legit_traffic_smtp-ssl"
+pass out inet proto tcp from any to any port 25 flags S/SA keep state label "legit_traffic_smtp"
+pass out inet proto tcp from any to any port 21 flags S/SA keep state label "legit_traffic_ftp"
+pass inet proto tcp from any to any port 49152:65535 flags S/SA keep state label "legit_traffic_high-ports"
+
+
+

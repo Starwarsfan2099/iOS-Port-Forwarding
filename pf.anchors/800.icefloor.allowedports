@@ -1,0 +1,4 @@
+tcpservicesrule = 'pass in inet proto tcp from <whitelist> to any port {   67 68 123 389 636 5353 5354  } flags S/SA keep state'
+udpservicesrule = 'pass in inet proto udp from <whitelist> to any port {  53 67 68 123 389 636 5353 5354  } keep state'
+ 
+sshbruteforcerule = ' '

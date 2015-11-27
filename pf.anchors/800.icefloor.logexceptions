@@ -1,0 +1,8 @@
+
+
+
+
+table <ignored_ips> {  } persist
+block in from <ignored_ips> to any
+block out from any to <ignored_ips>
+ 

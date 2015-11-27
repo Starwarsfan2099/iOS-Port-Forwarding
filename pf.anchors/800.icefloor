@@ -1,0 +1,257 @@
+#
+# OS X PF firewall configuration 
+# 
+# installed by IceFloor 1.5
+# IceFloor is a free and open-source frontend for the OS X PF firewall
+# by Hany El Imam - www.hanynet.com
+#
+# 800.icefloor anchor configuration file
+
+
+
+
+
+#
+# IceFloor PF ruleset explained:
+#
+#
+# 1) PF.CONF	/etc/pf.conf is the main PF configuration file, the first loaded by the system.
+#				pf.conf loads 2 or 3 anchors according to IceFloor preferences.
+#				The first anchor is the NAT anchor "800.icefloor.nat" from file /etc/800.icefloor.nat.
+#				The second anchor is optional; it's the Apple OS X default anchor com.apple from file
+#				/etc/com.apple . This anchor is optionally loaded according to IceFloor preferences.
+#				The third anchor is 800.icefloor from THIS file (/etc/800.icefloor). This is the main IceFloor
+#				anchor. This file contains all filtering rules. This file also loads a bunch of sub-anchors
+#				used by IceFloor to handle specific connections. 
+#				Anchor 800.icefloor structure is described below.
+# 2) OPTIONS:	Set some PF options and import files to define a list of allowed services
+#				and to define white and black lists (allowed IPs and banned IPs)
+# 3) BLOCKS:	Block known bad hosts (emerging threats and custom blocks)
+#				using the "quick" option; packets from/to those hosts will be blocked and 
+#				discarded, they will not be checked against other Pf rules.
+#				Then issue a rule to block everything else. The "global" blocking rule lacks the "quick" 
+#				option so matching packets (all packets except packets already discarded) will be
+#				checked against other Pf rules, including "pass" rules. Packets that will not match any 
+#				other rule will be blocked because the "global" block rule is the last matching rule.
+# 4) PASS:		Packets matching "pass" rules will be accepted and considered legit traffic.
+#				Pass inbound connections from <whitelist> Pf table's hosts and pass outbound connections
+#				according to 800.icefloor.legit_traffic anchor rules. Inbound replies to legit
+#				outbound connections are passed using Pf "keep state" option. For each legit 
+#				outbound connection a dedicated Pf state is created to allow legit inbound connection 
+#				replies. For stateless protocols like UDP Pf uses timeouts.
+# 5) PASS NAT:	pass legit connections from/to NAT clients according to 800.iceflor.nat_clients.
+#				Please note: this anchor contains only "pass" rules to enable connections from/to NAT
+#				clients. NAT rules translation is not defined in this file. A dedicated IceFloor anchor
+#				800.icefloor.nat is loaded by main PF configuration file /etc/pf.conf. Translation and
+#				forwarding rules are set in sub-anchor NATrules.
+
+
+
+
+#################################################################
+### OPTIONS #####################################################
+#################################################################
+
+
+##### Imported files #####
+#
+# selected services (from IceFloor Services tab) 
+include '/etc/pf.anchors/800.icefloor.allowedports'
+# selected allowed hosts (from IceFloor Action tab)
+include '/etc/pf.anchors/800.icefloor.whitelist'
+# blacklisted ips and subnets (from IceFloor BlackList and Connection Inspector)
+include '/etc/pf.anchors/800.icefloor.blacklist'
+# define graylist table (temp IP bans with IceFloor Connection Inspector) 
+# please note: This rule may be moved on top of this file
+# by IceFloor app. This is normal. IPs are added to this table
+# by IceFloor app only in run-time. IPs will not be written to this file.
+table <graylist> {  } persist
+# ssh bruteforce table
+table <bruteforce> {  } persist
+
+##### PF Options #####
+#
+set block-policy drop
+set fingerprints '/etc/pf.os'
+
+##### Loopback #####
+#
+# skip loopback (no filtering on loopback interface)
+set skip on lo0
+
+
+
+
+#################################################################
+### BLOCK RULES #################################################
+#################################################################
+
+
+######### QUICK BLOCKS ##########
+#
+# (blocks with PF "quick" option. Packets are immediately blocked and will not be checked by other rules.)
+# Emerging Threats - dedicated anchor
+anchor '800.icefloor.emergingthreats' label "emerging_threats"
+load anchor '800.icefloor.emergingthreats' from '/etc/pf.anchors/800.icefloor.emergingthreats'
+#
+# Connection Inspector Blocks
+anchor '800.icefloor.inspector_blocks' label "inspector_blocks"
+load anchor '800.icefloor.inspector_blocks' from '/etc/pf.anchors/800.icefloor.inspector_blocks'
+#
+# My Custom Blocks (empty anchor with empty table: all content will be *blocked* )
+anchor '800.icefloor.my_custom_blocks' label "custom_blocks"
+load anchor '800.icefloor.my_custom_blocks' from '/etc/pf.anchors/800.icefloor.my_custom_blocks'
+#
+# SSH bruteforce rules 
+block in log quick from <bruteforce> to any label "bruteforce_in"
+# block out log quick from any to <bruteforce> # disabled...
+#
+# Black List (defined in IceFloor interface)
+block in log quick from <blacklist> to any label "blacklist_in"
+block out log quick from any to <blacklist> label "blacklist_out"
+#
+# Gray List (on the fly blocks from IceFloor's Connection Inspector)
+block in log quick from <graylist> to any label "graylist_in"
+block out log quick from any to <graylist> label "graylist_out"
+#
+# Misc blocks
+# block anything coming form source we have no back routes for
+block in quick from no-route to any
+# block packets whose ingress interface does not match the one the route back to their source address (antispoof)
+block in quick from urpf-failed label uRPF
+# funny option ... (disabled by default)
+# block in quick os "Windows" label "blocked_windows"
+
+
+######### DEFAULT BLOCKS ###########
+#
+# (blocks without PF "quick" option.)
+# Default global deny rule, with all blocked packets logged.
+# please note the lack of the "quick" option. 
+#
+block log inet all label "blocked_ipv4"
+block log inet6 all label "blocked_ipv6"
+#
+
+
+### LOG EXCEPTIONS ANCHOR
+#
+# this anchor contains blocking rules without "log" and "quick" options;
+# matching packets will be blocked but not logged; they will also be checked
+# against other following PF rules and passed if they match a pass rule. If not,
+# they will be blocked but not logged. Use this feature to avoid overloading your
+# PF logs file.
+#
+anchor '800.icefloor.logexceptions'
+load anchor '800.icefloor.logexceptions' from '/etc/pf.anchors/800.icefloor.logexceptions'
+
+
+
+
+########### PORT KNOCKING #######################################
+#
+# Port knocking anchor
+# this anchor may contain both "pass" and "block" rules, according to IceFloor interface.
+# Banned IPs are blocked using "quick" option.
+anchor '800.icefloor.port_knocking'
+load anchor '800.icefloor.port_knocking' from '/etc/pf.anchors/800.icefloor.port_knocking'
+
+
+
+
+
+#################################################################
+### PASS RULES ##################################################
+#################################################################
+
+
+# Permit dns
+pass inet proto udp from any to any port 53 keep state
+
+# Anchor for ICMP, IGMP, ESP, MULTICAST and custom fancy protocols...
+anchor '800.icefloor.proto'
+load anchor '800.icefloor.proto' from '/etc/pf.anchors/800.icefloor.proto'
+
+
+
+########## INBOUND CONNECTIONS #############
+#
+# Permit inbound connections to specified services from a selected list of IP and subnets
+# addresses (White List in IceFloor GUI, <whitelist> PF table); permit also outbound legit
+# replies to those inbound connections using PF states.
+
+# Permit access to local network services selected in IceFloor interface from selected allowed remote hosts;
+# Rules are defined in 800.icefloor.allowedports according to icefloor preferences;
+# run-time rules will appear like this:
+#
+# pass in inet proto tcp from <whitelist> to any port { allowed tcp ports } flags S/SA keep state
+# pass in inet proto udp from <whitelist> to any port { allowed udp ports } keep state
+#
+# we use $variables as those rules are optional; if no service is selected in icefloor "inbound" tab 
+# then no rule is needed here.
+$tcpservicesrule
+$udpservicesrule
+#
+# SSH SERVER WITH BRUTEFORCE PROTECTION 
+# Permit inbound connections from <whitelist> to local SSH server with brute force protection. (OPTIONAL)
+# Hosts that overload ssh server will be banned (bruteforce). Rule is defined in /etc/800.icefoor.allowedports
+# according to IceFloor preferences. Please note: if you allow port 22 in IceFloor advanced filtering this
+# brute force protection will be overridden.
+# run-time pf rule will appear like this:
+#
+# pass in proto tcp from <whitelist> to any port 22 flags S/SA keep state 
+#  \ (max-src-conn 50, max-src-conn-rate 15/5, overload <bruteforce> flush global)
+#
+# but in this conf file we refer to it with a $variable because this is an optional rule. 
+$sshbruteforcerule
+#
+# IceFloor advanced filtering rules 
+anchor '800.icefloor.advanced'
+load anchor '800.icefloor.advanced' from '/etc/pf.anchors/800.icefloor.advanced'
+#
+
+
+########### IPv6 ######################
+#
+# IPv6 specific rules(pass or block according to IceFloor interface)
+anchor '800.icefloor.v6'
+load anchor '800.icefloor.v6' from '/etc/pf.anchors/800.icefloor.v6'
+
+
+
+
+########### OUTBOUND CONNECTIONS ###########
+#
+# Outbound traffic is handled according to icefloor preferences.
+# Inbound replies to legit outbound connections will pass using states.
+# Please note that rules in this anchor will affect also NAT clients if using default IceFloor
+# NAT configuration.
+#
+# Permit traffic going out, keep state so that replies are automatically passed;
+anchor '800.icefloor.legit_traffic'
+load anchor '800.icefloor.legit_traffic' from '/etc/pf.anchors/800.icefloor.legit_traffic'
+
+
+########### NAT CONNECTIONS ################
+#
+# Permit NAT clients traffic going out, keep state so that replies are automatically passed;
+anchor '800.icefloor.nat_clients'
+load anchor '800.icefloor.nat_clients' from '/etc/pf.anchors/800.icefloor.nat_clients'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

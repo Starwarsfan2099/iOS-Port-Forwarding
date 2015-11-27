@@ -1,0 +1,8 @@
+#
+# IceFloor anchor for ipv6
+# ipv6 is blocked by default
+#
+
+
+block quick inet6 all
+

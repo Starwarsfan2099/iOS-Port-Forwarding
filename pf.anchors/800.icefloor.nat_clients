@@ -1,0 +1,1 @@
+pass quick inet from en0:network to !en0:network keep state label nat_traffic 

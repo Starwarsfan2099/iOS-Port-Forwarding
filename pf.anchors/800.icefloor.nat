@@ -1,0 +1,9 @@
+#
+# IceFloor NAT anchor
+#
+
+nat-anchor "NATrules/*"
+rdr-anchor "NATrules/*"
+load anchor "NATrules" from "/etc/pf.anchors/NATrules"
+anchor "NATrules"
+
