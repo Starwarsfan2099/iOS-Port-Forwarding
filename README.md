@@ -21,7 +21,7 @@ Copy all of the contents to /etc on the iOS device.
 
 #Usage
 
-After a successful start of sslstrip and arpspoofing, run this command: pfctl -e -f pf_ssl.conf
+After a successful start of sslstrip and arpspoofing, run this command: pfctl -e -f /etc/pf_ssl.conf
 
 To stop: Reboot Device :)
 
