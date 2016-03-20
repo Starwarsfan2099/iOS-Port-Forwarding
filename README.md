@@ -26,4 +26,4 @@ After a successful start of sslstrip and arpspoofing, run this command: pfctl -e
 To stop: Reboot Device :)
 
 # Problems
-If you receive a no module named twisted error: Copy /usr/lib/python2.5/twisted to /usr/lib/pyhton2.7
+If you receive a no module named twisted error: Copy /usr/lib/python2.5/twisted to /usr/lib/python2.7
