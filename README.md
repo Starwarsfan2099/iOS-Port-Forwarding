@@ -1,7 +1,7 @@
-#SSLStrip Possible on iOS!
-This package allows you to port forward all traffic through a proxy on your iOS device. This is the same as using iptables on Linux systems to port forward.
+# SSLStrip Possible on iOS!
+This package allows you to port forward all traffic through a proxy on your iOS device. This is the same as using iptables on Linux systems to port forward. Only tested on iOS 6.
 
-#Requirements
+# Requirements
 
 +Python2.7
 
@@ -19,7 +19,7 @@ All of these can be downloaded from my repo: http://www.starwarsfan2099.x10host.
 
 Copy all of the contents to /etc on the iOS device.
 
-#Usage
+# Usage
 
 After a successful start of sslstrip and arpspoofing, run this command: pfctl -e -f /etc/pf_ssl.conf
 
